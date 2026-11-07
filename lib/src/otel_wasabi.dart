@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_wasabi_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_wasabi';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class WasabiResult {
+  /// Creates a result.
   const WasabiResult({
     this.bucket,
     this.region,
@@ -56,8 +57,13 @@ class WasabiResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class WasabiCallResult<T> {
+  /// Creates a call result.
   const WasabiCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final WasabiResult? result;
 }
@@ -88,68 +94,68 @@ Future<T> tracedWasabi<T>({
   final span = _tracer().startSpan(
     'wasabi $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.bucket != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'wasabi.bucket',
           r.result!.bucket!,
         ));
       }
       if (r.result!.region != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'wasabi.region',
           r.result!.region!,
         ));
       }
       if (r.result!.bytes != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'wasabi.bytes',
           r.result!.bytes!,
         ));
       }
       if (r.result!.parts != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'wasabi.parts',
           r.result!.parts!,
         ));
       }
       if (r.result!.storageClass != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'wasabi.storage_class',
           r.result!.storageClass!,
         ));
       }
       if (r.result!.minimumStoragePolicyViolated != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'wasabi.min_storage_violation',
           r.result!.minimumStoragePolicyViolated!,
         ));
       }
       if (r.result!.compliance != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'wasabi.compliance',
           r.result!.compliance!,
         ));
       }
       if (r.result!.versionId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'wasabi.version.id',
           r.result!.versionId!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'wasabi.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -160,13 +166,13 @@ Future<T> tracedWasabi<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
